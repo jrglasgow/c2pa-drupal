@@ -1,0 +1,7 @@
+name: c2pa
+type: module
+description: Provides c2pa integration for supported media
+package: Custom
+core_version_requirement: ^9 || ^10
+dependencies:
+  - image

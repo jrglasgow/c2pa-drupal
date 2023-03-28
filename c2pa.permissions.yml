@@ -1,0 +1,4 @@
+administer c2pa configuration:
+  title: 'Administer c2pa configuration'
+  description: 'Optional description.'
+  restrict access: true
