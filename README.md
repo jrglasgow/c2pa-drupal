@@ -1,7 +1,7 @@
 # c2pa-drupal
 Drupal module enabling the processing &amp; display of c2pa data for supported images
 
-This module is a work in progress. It is not currently available via composer, etc.
+This module is a work in progress and is not being actively maintained. It is not currently available via composer, etc.
 
 Currently, there are two parts to this module:
 
