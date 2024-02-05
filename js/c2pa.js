@@ -5,10 +5,10 @@ import {
 } from "https://cdn.jsdelivr.net/npm/c2pa@0.14.4/+esm";
 import "https://cdn.jsdelivr.net/npm/c2pa-wc@0.10.15/+esm";
 
-((Drupal, once) => {
+((Drupal, once, drupalSettings) => {
   Drupal.behaviors.c2pa = {
-    async attach() {
-      once("init-c2pa", "html").forEach(async (element) => {
+    async attach(context, settings) {
+      once("init-c2pa", ".c2pa-wrapper", context).forEach(async (wrapper) => {
         const c2pa = await createC2pa({
           wasmSrc:
             "https://cdn.jsdelivr.net/npm/c2pa@0.14.4/dist/assets/wasm/toolkit_bg.wasm",
@@ -16,8 +16,7 @@ import "https://cdn.jsdelivr.net/npm/c2pa-wc@0.10.15/+esm";
             "https://cdn.jsdelivr.net/npm/c2pa@0.14.4/dist/c2pa.worker.min.js",
         });
 
-        element.querySelectorAll(".c2pa-wrapper").forEach(async (wrapper) => {
-          const image = wrapper.querySelector("img");
+        wrapper.querySelectorAll("img").forEach(async (image) => {
           const result = await c2pa.read(image);
           const manifestStoreResult = await createL2ManifestStore(
             result.manifestStore
@@ -45,4 +44,4 @@ import "https://cdn.jsdelivr.net/npm/c2pa-wc@0.10.15/+esm";
       });
     },
   };
-})(Drupal, once);
+})(Drupal, once, drupalSettings);
