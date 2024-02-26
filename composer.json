@@ -1,0 +1,13 @@
+{
+    "name": "contentauth/c2pa-drupal",
+    "description": "Provides c2pa integration for supported media",
+    "type": "drupal-module",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Drupal\\c2pa\\": "src/"
+        }
+    },
+    "minimum-stability": "dev",
+    "require": {}
+}
