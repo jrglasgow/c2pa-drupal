@@ -2,7 +2,7 @@ import {
   createC2pa,
   createL2ManifestStore,
   generateVerifyUrl,
-} from "https://cdn.jsdelivr.net/npm/c2pa@0.14.4/+esm";
+} from "https://cdn.jsdelivr.net/npm/c2pa@0.17.8/+esm";
 import "https://cdn.jsdelivr.net/npm/c2pa-wc@0.10.15/+esm";
 
 ((Drupal, once) => {
@@ -11,9 +11,9 @@ import "https://cdn.jsdelivr.net/npm/c2pa-wc@0.10.15/+esm";
       once("init-c2pa", "html").forEach(async (element) => {
         const c2pa = await createC2pa({
           wasmSrc:
-            "https://cdn.jsdelivr.net/npm/c2pa@0.14.4/dist/assets/wasm/toolkit_bg.wasm",
+            "https://cdn.jsdelivr.net/npm/c2pa@0.17.8/dist/assets/wasm/toolkit_bg.wasm",
           workerSrc:
-            "https://cdn.jsdelivr.net/npm/c2pa@0.14.4/dist/c2pa.worker.min.js",
+            "https://cdn.jsdelivr.net/npm/c2pa@0.17.8/dist/c2pa.worker.min.js",
         });
 
         element.querySelectorAll(".c2pa-wrapper").forEach(async (wrapper) => {
