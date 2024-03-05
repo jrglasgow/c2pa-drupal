@@ -46,3 +46,11 @@
     $variables['image']["#$key"] = $item->$key;
   }
  }
+
+/**
+ * Implements template_preprocess_filter_caption().
+ */
+function c2pa_preprocess_filter_caption(&$vars) {
+  $vars['classes'] .= ' c2pa-wrapper';
+  $vars['#attaches']['library'][] = 'c2pa/c2pa';
+}
