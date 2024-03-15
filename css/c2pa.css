@@ -7,3 +7,138 @@
   top: 10px;
   right: 10px;
 }
+
+.c2pa-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.c2pa-wrapper .c2pa-indicator-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  height: 26px;
+  width: 26px;
+  color: transparent;
+  overflow: hidden;
+  background: url('../assets/svg/color/info.svg');
+  border: none;
+}
+
+.c2pa-popover .info-popover-button {
+  color: transparent;
+  overflow: hidden;
+
+  background: url('../assets/svg/monochrome/help.svg');
+  background-position: center;
+  height: 1rem;
+  width: 1rem;
+  position: absolute;
+  top: 0.25rem;
+  right: 1rem;
+  background-position: center;
+  border: none;
+}
+.c2pa-popover .info-popover-popover {
+  position: absolute;
+  margin: 0;
+  border-radius: 1rem 0.25rem 1rem 1rem;
+  border: 1px solid lightgray;
+  padding: 1rem;
+}
+.c2pa-popover .info-popover-button:not([disabled]):focus,
+.c2pa-wrapper .c2pa-indicator-button:not([disabled]):focus {
+  border-radius: 1rem;
+}
+
+div.c2pa-popover {
+  /* Float on top of the UI */
+  position: absolute;
+
+  /* Avoid layout interference */
+  width: max-content;
+  top: 0;
+  left: 0;
+  margin: 0;
+
+  /* make it look nicer */
+  padding: 1rem;
+  border-radius: 1rem;
+  border-color: white;
+  box-shadow: 0px 0px 50px 5px #AAAAAA
+}
+div.c2pa-popover body {
+  background: transparent;
+}
+div.c2pa-popover h4 {
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+div.c2pa-popover dd {
+  margin-inline-start: 0;
+  margin-bottom: 1rem;
+}
+
+.c2pa-popover dd::before {
+  content: '- ';
+}
+
+.c2pa-manifest-summary section ul {
+  padding-left: 0;
+}
+.c2pa-manifest-summary section {
+  border-bottom: 1px solid #ddd;
+}
+.c2pa-manifest-summary section li {
+  list-style-type: none;
+
+}
+
+.c2pa-manifest-summary section.edits-and-activity li {
+  padding-bottom: 1em;
+}
+.c2pa-manifest-summary section.edits-and-activity li img.icon {
+  height: 1rem;
+}
+
+.c2pa-manifest-summary section.ingredients li {
+  width: 4rem;
+  height: 4rem;
+  display: inline-flex;
+  background: lightgray;
+  position: relative;
+}
+
+.c2pa-manifest-summary section.ingredients li.has-manifest:after {
+  content: '';
+  background: url('../assets/svg/color/info.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.c2pa-manifest-summary section.ingredients img {
+  max-width: 4rem;
+  max-height: 4rem;
+  margin: auto
+}
+.c2pa-manifest-summary section {
+  position: relative;
+}
+
+.c2pa-manifest-summary a.view-more {
+  display: block;
+  border: 2px solid gray;
+  text-align: center;
+  border-radius: 1.5rem;
+  height: 3rem;
+  padding-top: 0.5rem;
+  font-weight: bold;
+  text-decoration: none;
+  color: black;
+  margin: auto auto 0.5rem auto;
+}
