@@ -121,10 +121,11 @@ div.c2pa-popover dd {
   height: 1.5rem;
 }
 
-.c2pa-manifest-summary section.ingredients img {
+.c2pa-popover .c2pa-manifest-summary section.ingredients img {
   max-width: 4rem;
   max-height: 4rem;
-  margin: auto
+  margin: auto;
+  object-fit: contain;
 }
 .c2pa-manifest-summary section {
   position: relative;
