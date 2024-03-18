@@ -4,12 +4,17 @@ import {
   generateVerifyUrl,
 } from "https://cdn.jsdelivr.net/npm/c2pa@0.17.8/+esm";
 import "https://cdn.jsdelivr.net/npm/c2pa-wc@0.10.15/+esm";
+/* instead of using the c2pa web componentslibrary which is inaccessible create our own HTML compatible popover */
 //import '/libraries/c2pa-js/packages/c2pa-wc/dist/index.js'
 import { computePosition, autoUpdate } from 'https://cdn.jsdelivr.net/npm/@floating-ui/dom@1.3.0/+esm';
 
 
 ((Drupal, once, drupalSettings) => {
 
+  /**
+   * prevent Floating UI from complaining about the variable not existing and breaking
+   * @type {{env: {NODE_ENV: string}}}
+   */
   window.process = {
     'env': {
       'NODE_ENV': "development"
@@ -27,8 +32,9 @@ import { computePosition, autoUpdate } from 'https://cdn.jsdelivr.net/npm/@float
   Drupal.c2pa.idFromElement = async function(element) {
     // add various data to an array to get something unique
     let id = [];
-    // include a counter
+    // include a counter to ensure we have unique date
     id.push(Drupal.c2pa.elementCount());
+    // add the tag name
     id.push(element.tagName.toLowerCase());
     for (let key in element.attributes) {
       id.push(element.attributes[key].toString());
@@ -36,11 +42,12 @@ import { computePosition, autoUpdate } from 'https://cdn.jsdelivr.net/npm/@float
     id.push(element.attributes)
     // turn the array into a string
     const idString = JSON.stringify(id);
+    // create a sha256 hash of the string and return "tagname-{hash}" as the ID
     return Drupal.c2pa.sha256(idString).then(function(result){return element.tagName.toLowerCase() + '-' + result});
   }
 
   /**
-   * get a sha256 has from a string
+   * get a sha256 hash from a string
    *
    * @param string
    * @returns {Promise<string>}
@@ -57,7 +64,7 @@ import { computePosition, autoUpdate } from 'https://cdn.jsdelivr.net/npm/@float
   }
 
   /**
-   * get a unique count of elements
+   * get a unique count of elements so no ID will be the same
    *
    * @returns {number|*}
    */
@@ -114,6 +121,7 @@ import { computePosition, autoUpdate } from 'https://cdn.jsdelivr.net/npm/@float
           popover.appendChild(manifestSummary);
           popover.addEventListener('toggle', Drupal.c2pa.positionPopover);
 
+          // add the elements to the wrapper
           wrapper.append(button);
           wrapper.append(popover);
           Drupal.attachBehaviors();
@@ -127,7 +135,16 @@ import { computePosition, autoUpdate } from 'https://cdn.jsdelivr.net/npm/@float
 
       once("popovertarget-hover", "button[popovertarget]", context).forEach(async (button) => {
         console.log('button', button);
-/*
+        /**
+         * TODO: Ideally not just keyboard events ('space', 'enter') or mouse click would trigger the popover,
+         * also the move over would trigger it along with the triggering element receiving keyboard docus,
+         * unfortunately with the code below as soon as the 'mouseout' event, or keyboard 'blur' event occurs the
+         * popover hides and the mouse/keyboard won't be able to do anything inside the popover, this needs some
+         * rethinking so it can be made to work.
+         *
+         * We possibly need to do something like the "Nested Popover menu example" - see
+         * https://mdn.github.io/dom-examples/popover-api/
+         *
         button.addEventListener('mouseover', (event) => {
           event.target.popoverTargetElement.showPopover();
         });
@@ -149,6 +166,16 @@ import { computePosition, autoUpdate } from 'https://cdn.jsdelivr.net/npm/@float
     },
   };
 
+  /**
+   * get the source file for the element so different element types can be used
+   *
+   * TODO: picture
+   * TODO: video
+   * TODO: ausio
+   *
+   * @param element
+   * @returns {*}
+   */
   Drupal.c2pa.elementSrc = function(element) {
     console.log('element', element);
     const tagName = element.tagName.toLowerCase();
@@ -183,7 +210,13 @@ import { computePosition, autoUpdate } from 'https://cdn.jsdelivr.net/npm/@float
     }
   }
 
-
+  /**
+   * generate all of the markup for the manifest summary popover contents
+   *
+   * @param manifestSummary
+   * @param src
+   * @returns {Promise<string>}
+   */
   Drupal.theme.c2paManifestSummary = async function(manifestSummary, src) {
     let c2paSignatureInformation = await Drupal.theme('c2paSignatureInformation', manifestSummary)
     let claimGenerator = await Drupal.theme('c2paClaimGenerator', manifestSummary);
@@ -212,6 +245,12 @@ import { computePosition, autoUpdate } from 'https://cdn.jsdelivr.net/npm/@float
     return Drupal.c2pa.sha256(idString).then(function(result){return result});
   }
 
+  /**
+   * create te markup for the infor item popover
+   *
+   * @param message
+   * @returns {Promise<string>}
+   */
   Drupal.theme.c2paInfoItem = async function(message) {
     let popoverId = await Drupal.c2pa.tooltipIdFromMessage(message);
     popoverId = 'info-' + popoverId;
@@ -222,6 +261,12 @@ import { computePosition, autoUpdate } from 'https://cdn.jsdelivr.net/npm/@float
 `;
   }
 
+  /**
+   * create a list of the assets used for this manifest
+   *
+   * @param ingredients
+   * @returns {Promise<string>}
+   */
   Drupal.theme.c2paAssetsUsed = async function(ingredients) {
     let title = Drupal.t('Assets used');
     let infoIcon = await Drupal.theme('c2paInfoItem', Drupal.t('Any assets used or added to this content'));
@@ -268,8 +313,16 @@ import { computePosition, autoUpdate } from 'https://cdn.jsdelivr.net/npm/@float
 </section>`
   }
 
+  /**
+   * information for a single edit action
+   *
+   * @param edit
+   * @returns {`
+<dt class="label" data-edit-id="${string}">${string|string}<span class="section-edits-and-activity-list-item-label">${string}</span></dt>
+<dd class="edit-description">${string}</dd>
+`}
+   */
   Drupal.theme.c2paSingleEdit = function(edit) {
-
     let label = Drupal.t(edit.label);
     let description = Drupal.t(edit.description);
     let iconTitle = Drupal.t('Icon for @label', {'@label': edit.label});
@@ -280,12 +333,26 @@ import { computePosition, autoUpdate } from 'https://cdn.jsdelivr.net/npm/@float
 `;
   }
 
+  /**
+   * create a link to https://contentcredentials.org/verify with the asset in a parameter to open that asset and show
+   * manifest information
+   *
+   * @param manifestSummary
+   * @param src
+   * @returns {`<a class="view-more" href="${*}" target="_blank">${string}</a>`}
+   */
   Drupal.theme.c2paVerifyUrl = function(manifestSummary, src) {
     const url = generateVerifyUrl(src);
     const linkText = Drupal.t('View more');
     return `<a class="view-more" href="${url}" target="_blank">${linkText}</a>`;
   }
 
+  /**
+   * display claim generator information
+   *
+   * @param manifestSummary
+   * @returns {Promise<string>}
+   */
   Drupal.theme.c2paClaimGenerator = async function(manifestSummary) {
     let claimGenerator = manifestSummary.manifestStore.claimGenerator.product;
     let title = Drupal.t('Produced With');
@@ -299,6 +366,12 @@ import { computePosition, autoUpdate } from 'https://cdn.jsdelivr.net/npm/@float
 </section>`
   }
 
+  /**
+   * display information about the signature
+   *
+   * @param manifestSummary
+   * @returns {Promise<string>}
+   */
   Drupal.theme.c2paSignatureInformation = async function(manifestSummary) {
     let ccTitle = Drupal.t("Content Credentials");
     let issuer = manifestSummary.manifestStore.signature.issuer;
