@@ -142,3 +142,9 @@ div.c2pa-popover dd {
   color: black;
   margin: auto auto 0.5rem auto;
 }
+
+
+.c2pa-popover .c2pa-manifest-summary section.edits-and-activity img.icon {
+  min-width: auto;
+  min-height: auto;
+}
