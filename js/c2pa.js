@@ -6,7 +6,7 @@ import {
 import "https://cdn.jsdelivr.net/npm/c2pa-wc@0.10.15/+esm";
 /* instead of using the c2pa web componentslibrary which is inaccessible create our own HTML compatible popover */
 //import '/libraries/c2pa-js/packages/c2pa-wc/dist/index.js'
-import { computePosition, autoUpdate } from 'https://cdn.jsdelivr.net/npm/@floating-ui/dom@1.3.0/+esm';
+import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr.net/npm/@floating-ui/dom@1.3.0/+esm';
 
 
 ((Drupal, once, drupalSettings) => {
@@ -20,6 +20,7 @@ import { computePosition, autoUpdate } from 'https://cdn.jsdelivr.net/npm/@float
       'NODE_ENV': "development"
     }
   }
+
   Drupal.c2pa = Drupal.c2pa || {};
 
   /**
@@ -93,6 +94,11 @@ import { computePosition, autoUpdate } from 'https://cdn.jsdelivr.net/npm/@float
         // within the .c2pa-wrapper find only img elements
         wrapper.querySelectorAll("img").forEach(async (image) => {
           const result = await c2pa.read(image);
+          let manifestStore = result.manifestStore;
+          if (manifestStore === null) {
+            // if there is no manifests, skip it
+            return;
+          }
           const manifestStoreResult = await createL2ManifestStore(
             result.manifestStore
           );
@@ -104,7 +110,6 @@ import { computePosition, autoUpdate } from 'https://cdn.jsdelivr.net/npm/@float
           // get the rendered manifest
           let manifestMarkup = await Drupal.theme('c2paManifestSummary', manifestStoreResult, src)
           const manifestSummary = new DOMParser().parseFromString(manifestMarkup, "text/html").firstChild;
-          console.log('manifestSummary', manifestSummary);
 
           // create the info button
           const button = document.createElement('button');
@@ -134,7 +139,7 @@ import { computePosition, autoUpdate } from 'https://cdn.jsdelivr.net/npm/@float
       });
 
       once("popovertarget-hover", "button[popovertarget]", context).forEach(async (button) => {
-        console.log('button', button);
+        //button.addEventListener()
         /**
          * TODO: Ideally not just keyboard events ('space', 'enter') or mouse click would trigger the popover,
          * also the move over would trigger it along with the triggering element receiving keyboard docus,
@@ -177,9 +182,8 @@ import { computePosition, autoUpdate } from 'https://cdn.jsdelivr.net/npm/@float
    * @returns {*}
    */
   Drupal.c2pa.elementSrc = function(element) {
-    console.log('element', element);
+    //console.log('element', element);
     const tagName = element.tagName.toLowerCase();
-    console.log('tagName', tagName);
     switch (tagName) {
       case 'img':
         return element.src;
@@ -199,7 +203,7 @@ import { computePosition, autoUpdate } from 'https://cdn.jsdelivr.net/npm/@float
 
     if (event.newState === 'open') {
       const cleanup = autoUpdate(invoker, popover, () => {
-        computePosition(invoker, popover, { placement: 'left-start' }).then(({x, y}) => {
+        computePosition(invoker, popover, { middleware: [autoPlacement()] }).then(({x, y}) => {
           Object.assign(popover.style, {
             left: `${x}px`,
             top: `${y}px`,
