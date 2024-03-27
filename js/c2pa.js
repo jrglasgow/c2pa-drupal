@@ -90,8 +90,9 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
             "https://cdn.jsdelivr.net/npm/c2pa@0.17.8/dist/c2pa.worker.min.js",
         });
 
-        wrapper.querySelectorAll("img").forEach(async (image) => {
-          const result = await c2pa.read(image);
+        wrapper.querySelectorAll("img, video, audio, picture").forEach(async (element) => {
+          const src = Drupal.c2pa.elementSrc(element);
+          const result = await c2pa.read(src);
           let manifestStore = result.manifestStore;
           if (manifestStore === null) {
             // if there is no manifests, skip it
@@ -100,13 +101,10 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
           const manifestStoreResult = await createL2ManifestStore(
             result.manifestStore
           );
-          const element = image;
           const id = await Drupal.c2pa.idFromElement(element);
 
-          const src = Drupal.c2pa.elementSrc(element);
-
           // get the rendered manifest
-          let manifestMarkup = await Drupal.theme('c2paManifestSummary', manifestStoreResult, src)
+          let manifestMarkup = await Drupal.theme('c2paManifestSummary', manifestStoreResult, src, result.source);
           const manifestSummary = new DOMParser().parseFromString(manifestMarkup, "text/html").firstChild;
 
           // create the info button
@@ -173,18 +171,21 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
    * get the source file for the element so different element types can be used
    *
    * TODO: picture
-   * TODO: video
-   * TODO: ausio
    *
    * @param element
    * @returns {*}
    */
   Drupal.c2pa.elementSrc = function(element) {
-    //console.log('element', element);
     const tagName = element.tagName.toLowerCase();
     switch (tagName) {
       case 'img':
         return element.src;
+        break;
+      case 'video':
+      case 'audio':
+        // grab the first source in the hopes that the first source is the best option
+        const sources = element.querySelectorAll('source');
+        return sources[0].src;
         break;
     }
   }
@@ -219,12 +220,12 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
    * @param src
    * @returns {Promise<string>}
    */
-  Drupal.theme.c2paManifestSummary = async function(manifestSummary, src) {
-    let c2paSignatureInformation = await Drupal.theme('c2paSignatureInformation', manifestSummary)
+  Drupal.theme.c2paManifestSummary = async function(manifestSummary, srcUrl, manifestSource) {
+    let c2paSignatureInformation = await Drupal.theme('c2paSignatureInformation', manifestSummary, manifestSource)
     let claimGenerator = await Drupal.theme('c2paClaimGenerator', manifestSummary);
-    let verifyUrl = await Drupal.theme('c2paVerifyUrl', manifestSummary, src);
+    let verifyUrl = await Drupal.theme('c2paVerifyUrl', manifestSummary, srcUrl);
     let editsAndActivity = await Drupal.theme('c2paEditsAndActivity', manifestSummary.manifestStore.editsAndActivity);
-    let assetsUsed = await Drupal.theme('c2paAssetsUsed', manifestSummary.manifestStore.ingredients);
+    let assetsUsed = await Drupal.theme('c2paAssetsUsed', manifestSummary.manifestStore.ingredients, manifestSource);
     let html = `
 <div class="c2pa-manifest-summary">
     ${c2paSignatureInformation}
@@ -276,10 +277,18 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
     ingredients.forEach((thisIngredient) => {
       let ingredientTitle = Drupal.t('A thumbnail of a file used as an ingredient to make this media asset: @fileName.', {'@fileName': thisIngredient.title});
       if (thisIngredient.hasManifest) {
-        ingredientTitle += ' ' + Drupal.t('A Content Credentials logo (the letters CR in a speech bubble) hovers over this imsage signifying that this ingredient contains a manifest.');
+        ingredientTitle += ' ' + Drupal.t('A Content Credentials logo (the letters CR in a speech bubble) hovers over this image signifying that this ingredient contains a manifest.');
       }
       let ingredientClass = thisIngredient.hasManifest ? 'has-manifest' : 'no-manifest';
-      let thisIngredientMarkup = `<img alt="${ingredientTitle}" src="${thisIngredient.thumbnail}"/>`
+      let emptyText = Drupal.t('This ingredient contains no thumbnail.');
+      let thisIngredientMarkup = `<a title="${ingredientTitle} ${emptyText}" class="image-thumb empty" href="#"><span class="hidden">${emptyText}</span><a/>`;
+
+      if (thisIngredient.thumbnail) {
+        thisIngredientMarkup = `<img alt="${ingredientTitle}" src="${thisIngredient.thumbnail}"/>`;
+      }
+      else {
+
+      }
       items.push(`<li class="${ingredientClass}" data-format="${thisIngredient.format}" data-has-manifest="${thisIngredient.hasManifest}">${thisIngredientMarkup}</li>`);
     });
     items = items.join('');
@@ -374,8 +383,24 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
    * @param manifestSummary
    * @returns {Promise<string>}
    */
-  Drupal.theme.c2paSignatureInformation = async function(manifestSummary) {
+  Drupal.theme.c2paSignatureInformation = async function(manifestSummary, manifestSource) {
     let ccTitle = Drupal.t("Content Credentials");
+    let thumbnailTitle = Drupal.t('');
+    let thumbnailMarkup = `<a href="#">${thumbnailTitle}</a>`;
+
+    let url = false;
+    if (manifestSource.thumbnail.blob) {
+      // there is a thumbnail that can be used
+      url = URL.createObjectURL(manifestSource.thumbnail.blob);
+    }
+    else if (manifestSource.blob && manifestSource.blob.type.search('image/')) {
+      // we have a blob or the source and it is of an image type so it can be used
+      url = URL.createObjectURL(manifestSource.blob);
+    }
+    if (url) {
+      // there is a thumbnail
+      thumbnailMarkup = `<img src="${url}" title="${thumbnailTitle}"/>`;
+    }
     let issuer = manifestSummary.manifestStore.signature.issuer;
     let signDate = new Date(manifestSummary.manifestStore.signature.isoDateString);
     let signDateString = signDate.toLocaleDateString() + ' ' +  signDate.toLocaleTimeString();
@@ -385,6 +410,7 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
     let html = `
 <section class="signature-information">
     <h4>${ccTitle}${infoIcon}</h4>
+    <div class="thumbnail">${thumbnailMarkup}</div>
     <dt class="cert-issuer"><span class="cert-issuer" aria-label="${issuerTitle}" title="${issuerTitle}">${issuer}</span></dt>
     <dd class="signature-date"><span class="signature-date" aria-label="${dateTitle}" title="${dateTitle}">${signDateString}</span></dd>
 </section>

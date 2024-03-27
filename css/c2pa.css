@@ -6,11 +6,15 @@
   position: absolute;
   top: 10px;
   right: 10px;
+  z-index: 1000;
 }
 
 .c2pa-wrapper {
   position: relative;
   display: inline-block;
+}
+.c2pa-wrapper.audio {
+  display: block;
 }
 
 .c2pa-wrapper .c2pa-indicator-button {
@@ -79,8 +83,8 @@ div.c2pa-popover dd {
   margin-bottom: 1rem;
 }
 
-.c2pa-popover dd::before {
-  content: '- ';
+.c2pa-popover section.edits-and-activity dd {
+  font-style: italic;
 }
 
 .c2pa-manifest-summary section ul {
@@ -120,6 +124,18 @@ div.c2pa-popover dd {
   width: 1.5rem;
   height: 1.5rem;
 }
+.c2pa-manifest-summary section.ingredients li a {
+  display: block;
+  background: url('../assets/svg/monochrome/broken-image.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+.c2pa-manifest-summary section.ingredients li a span.hidden {
+  height: 0px;
+  overflow: hidden;
+  display: block;
+}
 
 .c2pa-popover .c2pa-manifest-summary section.ingredients img {
   max-width: 4rem;
@@ -142,6 +158,19 @@ div.c2pa-popover dd {
   text-decoration: none;
   color: black;
   margin: auto auto 0.5rem auto;
+}
+
+.c2pa-manifest-summary section.signature-information .thumbnail {
+  float: left;
+  margin-right: .5rem;
+  background: lightgray;
+  width: 4rem;
+  height: 4rem;
+  display: inline-flex;
+}
+.c2pa-manifest-summary section.signature-information .thumbnail img {
+  object-fit: contain;
+  margin: auto;
 }
 
 
