@@ -12,7 +12,4 @@ c2pa:
 
 popover:
   js:
-    'https://cdn.jsdelivr.net/npm/@oddbird/popover-polyfill@0.4.0/dist/popover.iife.min.js': {}
-  css:
-    component:
-      'https://cdn.jsdelivr.net/npm/@oddbird/popover-polyfill@0.4.0/dist/popover.css': {}
+    '/libraries/oddbird--popover-polyfill/dist/popover.iife.min.js': {minified: true}

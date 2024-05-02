@@ -5,8 +5,19 @@ This module is a work in progress and is not being actively maintained. It is no
 
 Currently, there are two parts to this module:
 
-**c2pa_image_formatter:** 
+**c2pa_image_formatter:**
 This is an image field formatter that provides the necessary html/CSS to overlay our web components on the images. It wraps images in a div marked with the “c2pa-wrapper” class, which is used both to apply positioning rules and for the script to locate images the script should attempt to process.
 
 **c2pa.js:**
-This script will pull in the necessary dependencies from the jsdelivr CDN (two of them – our core SDK for processing and the web components for UI) and then search for images wrapped with a “c2pa-wrapper” div. Upon finding one it will run the image through our SDK, extract the C2PA data, and then append the web component elements to the DOM with the correct properties set. 
+This script will pull in the necessary dependencies from the jsdelivr CDN (two of them – our core SDK for processing and the web components for UI) and then search for images wrapped with a “c2pa-wrapper” div. Upon finding one it will run the image through our SDK, extract the C2PA data, and then append the web component elements to the DOM with the correct properties set.
+
+# Additional Packages
+There are some JavaScript packages that are required for the User Interface, please add the Asset Packagist repository to your composer.json
+```
+  'repositories': {
+        {
+            "type": "composer",
+            "url": "https://asset-packagist.org"
+        }
+    }
+```

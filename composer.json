@@ -9,5 +9,13 @@
         }
     },
     "minimum-stability": "dev",
-    "require": {}
+    "require": {
+        "npm-asset/oddbird--popover-polyfill": "^0.4.0"
+    },
+    'repositories': {
+        {
+            "type": "composer",
+            "url": "https://asset-packagist.org"
+        }
+    }
 }

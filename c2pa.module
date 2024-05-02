@@ -12,3 +12,5 @@ function c2pa_preprocess_filter_caption(&$vars) {
   $vars['classes'] .= ' c2pa-wrapper';
   $vars['#attached']['library'][] = 'c2pa/c2pa';
 }
+
+#function c2pa_preprocess_
