@@ -11,7 +11,7 @@
 
 .c2pa-wrapper {
   position: relative;
-  display: inline-block;
+  display: block;
 }
 .c2pa-wrapper.audio {
   display: block;
