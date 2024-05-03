@@ -11,8 +11,7 @@
     "minimum-stability": "dev",
     "require": {
         "npm-asset/oddbird--popover-polyfill": "^0.4.0",
-        "npm-asset/c2pa": "^0.17.1",
-        "npm-asset/c2pa-wc": "^0.5.0"
+        "npm-asset/jquery-sizes": "^0.33.0"
     },
     "repositories": [
         {
