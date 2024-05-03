@@ -10,12 +10,14 @@
     },
     "minimum-stability": "dev",
     "require": {
-        "npm-asset/oddbird--popover-polyfill": "^0.4.0"
+        "npm-asset/oddbird--popover-polyfill": "^0.4.0",
+        "npm-asset/c2pa": "^0.17.1",
+        "npm-asset/c2pa-wc": "^0.5.0"
     },
-    'repositories': {
+    "repositories": [
         {
             "type": "composer",
             "url": "https://asset-packagist.org"
         }
-    }
+    ]
 }

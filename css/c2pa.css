@@ -1,3 +1,9 @@
+@supports not selector(:popover-open) {
+  [popover]:not(.\:popover-open) {
+    display: none;
+  }
+}
+
 .c2pa-wrapper {
   position: relative;
 }
@@ -73,10 +79,12 @@ div.c2pa-popover {
 }
 div.c2pa-popover body {
   background: transparent;
+  overflow: visible;
 }
 div.c2pa-popover h4 {
   font-weight: bold;
   margin-bottom: 1rem;
+  position: relative;
 }
 div.c2pa-popover dd {
   margin-inline-start: 0;
@@ -85,6 +93,9 @@ div.c2pa-popover dd {
 
 .c2pa-popover section.edits-and-activity dd {
   font-style: italic;
+}
+.c2pa-manifest-summary {
+
 }
 
 .c2pa-manifest-summary section ul {

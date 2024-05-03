@@ -9,7 +9,7 @@ import "https://cdn.jsdelivr.net/npm/c2pa-wc@0.10.15/+esm";
 import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr.net/npm/@floating-ui/dom@1.3.0/+esm';
 
 
-((Drupal, once, drupalSettings) => {
+(($, Drupal, once, drupalSettings) => {
 
   /**
    * prevent Floating UI from complaining about the variable not existing and breaking
@@ -203,15 +203,59 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
     if (event.newState === 'open') {
       const cleanup = autoUpdate(invoker, popover, () => {
         computePosition(invoker, popover, { middleware: [autoPlacement()] }).then(({x, y}) => {
-          Object.assign(popover.style, {
+          let thisPosition = 'absolute';
+          let thisPopoverClass = $(popover).attr('class');
+          if (thisPopoverClass.search(':popover-open') == -1) {
+            // popover is supported  we don't do anything extra
+          }
+          else {
+            // popover is not supported
+            let thisClass = invoker.getAttribute('class');console.log('thisClass', thisClass);
+            if (thisClass == 'info-popover-button') {
+              // only act on the inner popovers as the outer popover has no issues
+              thisPosition = 'fixed';
+              const invokerPosition = $(invoker).fixedPosition();
+              const popoverOffset = $(popover).offset();
+              //x = invokerPosition.x ;
+              y = invokerPosition.y;
+            }
+          }
+          const newStyles = {
             left: `${x}px`,
             top: `${y}px`,
-          });
+            position: thisPosition
+          };
+          Object.assign(popover.style, newStyles);
         });
       });
       return cleanup;
     }
   }
+
+  $.fn.outerOffset = function () {
+    /// <summary>Returns an element's offset relative to its outer size; i.e., the sum of its left and top margin, padding, and border.</summary>
+    /// <returns type="Object">Outer offset</returns>
+    var margin = this.margin();console.log('margin', margin);
+    var padding = this.padding();console.log('padding', padding);
+    var border = this.border();console.log('border', border);
+    return {
+      left: margin.left + padding.left + border.left,
+      top: margin.top + padding.top + border.top
+    }
+  };
+
+  $.fn.fixedPosition = function () {
+    /// <summary>Returns the "fixed" position of the element; i.e., the position relative to the browser window.</summary>
+    /// <returns type="Object">Object with 'x' and 'y' properties.</returns>
+    var offset = this.offset();console.log('offset', offset);
+    var $doc = $(document);console.log('$doc', $doc);console.log('$doc.scrollLeft()', $doc.scrollLeft());console.log('$doc.scrollTop()', $doc.scrollTop());
+    var bodyOffset = $(document.body).outerOffset();console.log('bodyOffset', bodyOffset);
+    return {
+      x: offset.left - $doc.scrollLeft() + bodyOffset.left,
+      y: offset.top - $doc.scrollTop() + bodyOffset.top
+    };
+  };
+
 
   /**
    * generate all of the markup for the manifest summary popover contents
@@ -417,4 +461,4 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
 `;
     return html;
   }
-})(Drupal, once, drupalSettings);
+})(jQuery, Drupal, once, drupalSettings);

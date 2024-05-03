@@ -9,6 +9,27 @@ c2pa:
     - core/drupalSettings
     - c2pa/jquery-labelauty
     - c2pa/popover
+    - c2pa/jquery-sizes
+#    - c2pa/c2pa-core
+#    - c2pa/floating-ui--dom
+#    - c2pa/c2pa-wc
+
+jquery-sizes:
+  js:
+    '/libraries/jquery-sizes/lib/jquery.sizes.js': { }
+
+
+#c2pa-core:
+#  js:
+#    '/libraries/c2pa/dist/c2pa.esm.min.js': { minified: true }
+#
+#floating-ui--dom:
+#  js:
+#    '/libraries/floating-ui--dom/src/index.js': {}
+#
+#c2pa-wc:
+#  js:
+#    '/libraries/oddbird--popover-polyfill/dist/popover.iife.min.js': { minified: true }
 
 popover:
   js:
