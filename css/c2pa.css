@@ -4,10 +4,6 @@
   }
 }
 
-.c2pa-wrapper {
-  position: relative;
-}
-
 .c2pa-wrapper cai-popover {
   position: absolute;
   top: 10px;
@@ -19,8 +15,15 @@
   position: relative;
   display: block;
 }
-.c2pa-wrapper.audio {
+.c2pa-wrapper.audio,
+.c2pa-wrapper.video {
+  /* video and audio need to have display: block; or the player may take more space than desired on the page */
   display: block;
+}
+
+.c2pa-wrapper.image {
+  /* images need to be an inline-block or the popover button could appear outside of a portrait image */
+  display: inline-block;
 }
 
 .c2pa-wrapper .c2pa-indicator-button {

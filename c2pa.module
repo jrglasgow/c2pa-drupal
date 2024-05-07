@@ -9,8 +9,6 @@
  * Implements template_preprocess_filter_caption().
  */
 function c2pa_preprocess_filter_caption(&$vars) {
-  $vars['classes'] .= ' c2pa-wrapper';
+  $vars['classes'] .= ' c2pa-wrapper image';
   $vars['#attached']['library'][] = 'c2pa/c2pa';
 }
-
-#function c2pa_preprocess_
