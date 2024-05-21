@@ -9,12 +9,12 @@
  * Implements hook_install().
  */
 function c2pa_install() {
-  \Drupal::messenger()->addStatus(__FUNCTION__);
+//  \Drupal::messenger()->addStatus(__FUNCTION__);
 }
 
 /**
  * Implements hook_uninstall().
  */
 function c2pa_uninstall() {
-  \Drupal::messenger()->addStatus(__FUNCTION__);
+//  \Drupal::messenger()->addStatus(__FUNCTION__);
 }

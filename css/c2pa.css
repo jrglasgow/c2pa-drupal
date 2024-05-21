@@ -40,6 +40,19 @@
   border: none;
   opacity: 70%;
 }
+figure.caption.c2pa-wrapper {
+  display: table;
+}
+figure.caption.c2pa-wrapper.align-right .c2pa-indicator-button,
+figure.caption.c2pa-wrapper.align-left .c2pa-indicator-button{
+  margin-right: 1rem;
+}
+figure.caption.c2pa-wrapper .c2pa-indicator-button{
+  top: 1.5rem;
+}
+figure.caption .c2pa-popover {
+  display: revert;
+}
 
 .c2pa-popover .info-popover-button {
   color: transparent;
