@@ -11,7 +11,8 @@
     "minimum-stability": "dev",
     "require": {
         "npm-asset/oddbird--popover-polyfill": "^0.4.0",
-        "npm-asset/jquery-sizes": "^0.33.0"
+        "npm-asset/jquery-sizes": "^0.33.0",
+        "drupal/core": "^10 | ^11"
     },
     "repositories": [
         {
