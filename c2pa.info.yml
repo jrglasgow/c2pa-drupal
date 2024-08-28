@@ -6,3 +6,4 @@ core_version_requirement: ^10 || ^11
 dependencies:
   - image
 configure: c2pa.settings
+version: 1.0.0

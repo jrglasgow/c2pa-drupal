@@ -210,7 +210,7 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
           }
           else {
             // popover is not supported
-            let thisClass = invoker.getAttribute('class');console.log('thisClass', thisClass);
+            let thisClass = invoker.getAttribute('class');
             if (thisClass == 'info-popover-button') {
               // only act on the inner popovers as the outer popover has no issues
               thisPosition = 'fixed';
