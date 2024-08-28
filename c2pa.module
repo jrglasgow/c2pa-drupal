@@ -11,4 +11,31 @@
 function c2pa_preprocess_filter_caption(&$vars) {
   $vars['classes'] .= ' c2pa-wrapper image';
   $vars['#attached']['library'][] = 'c2pa/c2pa';
+  c2pa_add_attachments($vars);
+}
+
+/**
+ * Add the drupalSettings and library attachments for the module to the '#attached' sub-array
+ *
+ * @param $build a build array
+ *
+ * @return void
+ */
+function c2pa_add_attachments(&$build) {
+  if (!isset($buid['#attached'])) {
+    $build['#attached'] = [];
+  }
+  if (!isset($build['#attached']['library'])) {
+    $build['#attached']['library'] = [];
+  }
+  $build['#attached']['library'][] = 'c2pa/c2pa';
+
+  if (!isset($build['#attached']['drupalSettings'])) {
+    $build['#attached']['drupalSettings'] = [];
+  }
+
+  if (!isset($build['#attached']['drupalSettings']['c2pa'])) {
+    $build['#attached']['drupalSettings']['c2pa'] =\Drupal::config('c2pa.settings')->getRawData();
+  }
+
 }

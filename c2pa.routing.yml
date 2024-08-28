@@ -1,0 +1,7 @@
+c2pa.settings:
+  path: '/admin/config/media/c2pa'
+  defaults:
+    _title: 'C2PA UI'
+    _form: 'Drupal\c2pa\Form\SettingsForm'
+  requirements:
+    _permission: 'administer site configuration'

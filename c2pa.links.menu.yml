@@ -1,0 +1,6 @@
+c2pa.settings:
+  title: C2PA UI
+  description: Settings for the C2PA User Interface
+  parent: system.admin_config_media
+  route_name: c2pa.settings
+  weight: 10

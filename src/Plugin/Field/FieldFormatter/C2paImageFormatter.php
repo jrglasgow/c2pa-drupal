@@ -41,12 +41,10 @@ class C2paImageFormatter extends ImageFormatter {
           'class' => ['image', 'c2pa-wrapper'],
         ],
         'image' => $element,
-        '#attached' => [
-          // the library doesn't need to be on every page load, just those with
-          // images and a wrapping container with the c2pa-wrapper class
-          'library' => 'c2pa/c2pa',
-        ],
       ];
+      // the library doesn't need to be on every page load, just those with
+      // images and a wrapping container with the c2pa-wrapper class
+      c2pa_add_attachments($element);
     }
 
     return $elements;

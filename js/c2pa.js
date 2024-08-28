@@ -265,11 +265,12 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
    * @returns {Promise<string>}
    */
   Drupal.theme.c2paManifestSummary = async function(manifestSummary, srcUrl, manifestSource) {
-    let c2paSignatureInformation = await Drupal.theme('c2paSignatureInformation', manifestSummary, manifestSource)
-    let claimGenerator = await Drupal.theme('c2paClaimGenerator', manifestSummary);
-    let verifyUrl = await Drupal.theme('c2paVerifyUrl', manifestSummary, srcUrl);
-    let editsAndActivity = await Drupal.theme('c2paEditsAndActivity', manifestSummary.manifestStore.editsAndActivity);
-    let assetsUsed = await Drupal.theme('c2paAssetsUsed', manifestSummary.manifestStore.ingredients, manifestSource);
+    console.log('drupalSettings.c2pa', drupalSettings.c2pa);
+    let c2paSignatureInformation = drupalSettings.c2pa.content_credentials ? await Drupal.theme('c2paSignatureInformation', manifestSummary, manifestSource) : '';
+    let claimGenerator = drupalSettings.c2pa.produced_with ? await Drupal.theme('c2paClaimGenerator', manifestSummary) : '';
+    let verifyUrl = drupalSettings.c2pa.view_more ? await Drupal.theme('c2paVerifyUrl', manifestSummary, srcUrl) : '';
+    let editsAndActivity = drupalSettings.c2pa.edits_and_activities ? await Drupal.theme('c2paEditsAndActivity', manifestSummary.manifestStore.editsAndActivity) : '';
+    let assetsUsed = drupalSettings.c2pa.assets_used ? await Drupal.theme('c2paAssetsUsed', manifestSummary.manifestStore.ingredients, manifestSource) : '';
     let html = `
 <div class="c2pa-manifest-summary">
     ${c2paSignatureInformation}
