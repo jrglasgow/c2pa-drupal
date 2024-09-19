@@ -266,11 +266,11 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
    */
   Drupal.theme.c2paManifestSummary = async function(manifestSummary, srcUrl, manifestSource) {
     console.log('drupalSettings.c2pa', drupalSettings.c2pa);
-    let c2paSignatureInformation = drupalSettings.c2pa.content_credentials ? await Drupal.theme('c2paSignatureInformation', manifestSummary, manifestSource) : '';
-    let claimGenerator = drupalSettings.c2pa.produced_with ? await Drupal.theme('c2paClaimGenerator', manifestSummary) : '';
-    let verifyUrl = drupalSettings.c2pa.view_more ? await Drupal.theme('c2paVerifyUrl', manifestSummary, srcUrl) : '';
-    let editsAndActivity = drupalSettings.c2pa.edits_and_activities ? await Drupal.theme('c2paEditsAndActivity', manifestSummary.manifestStore.editsAndActivity) : '';
-    let assetsUsed = drupalSettings.c2pa.assets_used ? await Drupal.theme('c2paAssetsUsed', manifestSummary.manifestStore.ingredients, manifestSource) : '';
+    let c2paSignatureInformation = (drupalSettings.c2pa.content_credentials ?? true) ? await Drupal.theme('c2paSignatureInformation', manifestSummary, manifestSource) : '';
+    let claimGenerator = (drupalSettings.c2pa.produced_with ?? true) ? await Drupal.theme('c2paClaimGenerator', manifestSummary) : '';
+    let verifyUrl = (drupalSettings.c2pa.view_more ?? true) ? await Drupal.theme('c2paVerifyUrl', manifestSummary, srcUrl) : '';
+    let editsAndActivity = (drupalSettings.c2pa.edits_and_activities ?? true) ? await Drupal.theme('c2paEditsAndActivity', manifestSummary.manifestStore.editsAndActivity) : '';
+    let assetsUsed = (drupalSettings.c2pa.assets_used ?? true) ? await Drupal.theme('c2paAssetsUsed', manifestSummary.manifestStore.ingredients, manifestSource) : '';
     let html = `
 <div class="c2pa-manifest-summary">
     ${c2paSignatureInformation}
