@@ -91,7 +91,11 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
         });
 
         wrapper.querySelectorAll("img, video, audio, picture").forEach(async (element) => {
-          const src = Drupal.c2pa.elementSrc(element);
+          let src = Drupal.c2pa.elementSrc(element);
+          let original = Drupal.c2pa.elementOriginal(element);
+          if ( original ) {
+            src = original;
+          }
           const result = await c2pa.read(src);
           let manifestStore = result.manifestStore;
           if (manifestStore === null) {
@@ -190,6 +194,24 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
     }
   }
 
+  Drupal.c2pa.elementOriginal = function(element) {
+    const tagName = element.tagName.toLowerCase();
+    switch (tagName) {
+      case 'img':
+        const original = $(element).data('original');
+        if (original) {
+          return original
+        }
+        return false;
+        break;
+      case 'video':
+      case 'audio':
+        return false;
+        break;
+    }
+    return false;
+  }
+
   /**
    * Use Floating UI to position the popover
    * this is from https://codepen.io/hidde/pen/wvQaRJy/fc4f308d20a3a3118ead55e6553a7d66?editors=1011
@@ -235,9 +257,9 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
   $.fn.outerOffset = function () {
     /// <summary>Returns an element's offset relative to its outer size; i.e., the sum of its left and top margin, padding, and border.</summary>
     /// <returns type="Object">Outer offset</returns>
-    var margin = this.margin();console.log('margin', margin);
-    var padding = this.padding();console.log('padding', padding);
-    var border = this.border();console.log('border', border);
+    var margin = this.margin();
+    var padding = this.padding();
+    var border = this.border();
     return {
       left: margin.left + padding.left + border.left,
       top: margin.top + padding.top + border.top
@@ -247,9 +269,9 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
   $.fn.fixedPosition = function () {
     /// <summary>Returns the "fixed" position of the element; i.e., the position relative to the browser window.</summary>
     /// <returns type="Object">Object with 'x' and 'y' properties.</returns>
-    var offset = this.offset();console.log('offset', offset);
-    var $doc = $(document);console.log('$doc', $doc);console.log('$doc.scrollLeft()', $doc.scrollLeft());console.log('$doc.scrollTop()', $doc.scrollTop());
-    var bodyOffset = $(document.body).outerOffset();console.log('bodyOffset', bodyOffset);
+    var offset = this.offset();
+    var $doc = $(document);
+    var bodyOffset = $(document.body).outerOffset();
     return {
       x: offset.left - $doc.scrollLeft() + bodyOffset.left,
       y: offset.top - $doc.scrollTop() + bodyOffset.top
@@ -265,7 +287,7 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
    * @returns {Promise<string>}
    */
   Drupal.theme.c2paManifestSummary = async function(manifestSummary, srcUrl, manifestSource) {
-    console.log('drupalSettings.c2pa', drupalSettings.c2pa);
+    
     let c2paSignatureInformation = (drupalSettings.c2pa.content_credentials ?? true) ? await Drupal.theme('c2paSignatureInformation', manifestSummary, manifestSource) : '';
     let claimGenerator = (drupalSettings.c2pa.produced_with ?? true) ? await Drupal.theme('c2paClaimGenerator', manifestSummary) : '';
     let verifyUrl = (drupalSettings.c2pa.view_more ?? true) ? await Drupal.theme('c2paVerifyUrl', manifestSummary, srcUrl) : '';
