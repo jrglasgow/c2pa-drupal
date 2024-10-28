@@ -2,6 +2,8 @@
 
 namespace Drupal\c2pa\Plugin\Field\FieldFormatter;
 
+use Drupal\Core\Url;
+use Drupal\file\Entity\File;
 use Drupal\image\Plugin\Field\FieldFormatter\ImageFormatter;
 use Drupal\Core\Field\FieldItemListInterface;
 
@@ -34,6 +36,14 @@ class C2paImageFormatter extends ImageFormatter {
     $elements = parent::viewElements($items, $langcode);
 
     foreach ($elements as &$element) {
+      $item = $element['#item'];
+      $fid = $item->getValue()['target_id'];
+      $file = File::load($fid);
+      $uri = $file->getFileUri();
+      $original_url = $this->fileUrlGenerator->generateAbsoluteString($uri);
+      if (!empty($original_url)) {
+        $element['#item_attributes']['data-original'] = $original_url;
+      }
       // wrap the element in a container with the appropriate class
       $element = [
         '#type' => 'container',

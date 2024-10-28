@@ -287,7 +287,7 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
    * @returns {Promise<string>}
    */
   Drupal.theme.c2paManifestSummary = async function(manifestSummary, srcUrl, manifestSource) {
-    
+
     let c2paSignatureInformation = (drupalSettings.c2pa.content_credentials ?? true) ? await Drupal.theme('c2paSignatureInformation', manifestSummary, manifestSource) : '';
     let claimGenerator = (drupalSettings.c2pa.produced_with ?? true) ? await Drupal.theme('c2paClaimGenerator', manifestSummary) : '';
     let verifyUrl = (drupalSettings.c2pa.view_more ?? true) ? await Drupal.theme('c2paVerifyUrl', manifestSummary, srcUrl) : '';
