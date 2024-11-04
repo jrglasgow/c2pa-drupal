@@ -6,4 +6,4 @@ description: Provides c2pa integration for supported media
 name: c2pa
 package: Custom
 type: module
-version: 1.2.2
+version: 1.3.0
