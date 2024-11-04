@@ -79,6 +79,26 @@ figure.caption .c2pa-popover {
 .c2pa-wrapper .c2pa-indicator-button:not([disabled]):focus {
   border-radius: 1rem;
 }
+.c2pa-wrapper ul.context-menu {
+  padding-left: 0;
+  position: absolute;
+  z-index: 100;
+  display: none;
+}
+.c2pa-wrapper ul.context-menu.contextMenuActive {
+  display: block;
+}
+.c2pa-wrapper ul.context-menu li {
+  list-style-type: none;
+}
+.c2pa-wrapper a.button {
+  padding: 1px 6px;
+  border: 1px outset buttonborder;
+  border-radius: 3px;
+  color: buttontext;
+  background-color: buttonface;
+  text-decoration: none;
+}
 
 div.c2pa-popover {
   /* Float on top of the UI */

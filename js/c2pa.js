@@ -23,6 +23,10 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
 
   Drupal.c2pa = Drupal.c2pa || {};
 
+  Drupal.c2pa.menu = Drupal.c2pa.menu || document.createElement('ul');
+  Drupal.c2pa.menu.classList.add('c2pa-menu');
+  Drupal.c2pa.menuState = Drupal.c2pa.menuState || 0;
+
   /**
    * from the element construct an Id tag using usique data including the tagName, the attributes of the tag and a
    * counter
@@ -79,6 +83,96 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
     }
     return drupalSettings.c2pa.count;
   }
+
+  /**
+   * show the menu
+   *
+   * @param menu
+   */
+  Drupal.c2pa.toggleMenuOn = function(menu) {
+    if (Drupal.c2pa.menuState !== 1) {
+      Drupal.c2pa.menuState = 1;
+      menu.classList.add('contextMenuActive');
+    }
+  }
+
+  /**
+   * hide the menu
+   *
+   * @param menu
+   */
+  Drupal.c2pa.toggleMenuOff = function(menu) {
+    if (Drupal.c2pa.menuState !== 0) {
+      Drupal.c2pa.menuState  = 0;
+      menu.classList.remove('contextMenuActive');
+    }
+  }
+
+  /**
+   * get the position of the right click
+   *
+   * @param e
+   * @returns {{x: (boolean|number|*), y: (boolean|number|*)}}
+   */
+  Drupal.c2pa.getPosition = function(e) {
+
+    let coordinates = {
+      x: e.offsetX,
+      y: e.offsetY,
+    };
+    return coordinates;
+  }
+
+  /**
+   * position the menu where the click occured
+   *
+   * @param e
+   * @param menu
+   */
+  Drupal.c2pa.positionMenu = function(e, menu) {
+    let clickCoords = Drupal.c2pa.getPosition(e);
+    let clickCoordsX = clickCoords.x;
+    let clickCoordsY = clickCoords.y;
+
+    let menuWidth = menu.offsetWidth + 4;
+    let menuHeight = menu.offsetHeight + 4;
+
+    let windowWidth = window.innerWidth;
+    let windowHeight = window.innerHeight;
+
+    if (windowWidth - clickCoordsX < menuWidth) {
+      menu.style.left = windowWidth - menuWidth + "px";
+    } else {
+      menu.style.left = clickCoordsX + "px";
+    }
+
+    if (windowHeight - clickCoordsY < menuHeight) {
+      menu.style.top = windowHeight - menuHeight + "px";
+    } else {
+      menu.style.top = clickCoordsY + "px";
+    }
+  }
+
+  $(document).ready(function() {
+
+    // set up listeners to dismiss the context menu
+    $(document).click(function(e) {
+      // left mouse button was pressed
+      var button = e.which || e.button;
+      if ( button === 1 ) {
+        $('ul.context-menu').each(function() {
+          Drupal.c2pa.toggleMenuOff(this);
+        });
+      }
+      if ( e.keyCode === 27 ) {
+        // escape key was pressed
+        $('ul.context-menu').each(function() {
+          Drupal.c2pa.toggleMenuOff(this);
+        });
+      }
+    });
+
+  });
 
   Drupal.behaviors.c2pa = {
     async attach(context, settings) {
@@ -166,6 +260,45 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
         });
 
 /* */
+      });
+
+      once('init-download-original-menu-creation', '.c2pa-wrapper img[data-original]', context).forEach(async (image) => {
+        let original = $(image).data('original');
+
+        // add the menu (hidden) to the image
+        const contextmenu = document.createElement('ul');
+        contextmenu.classList.add('context-menu');
+        const button = document.createElement('a');
+        button.classList.add('originalButton');
+        button.textContent = Drupal.t('Download Original Image');
+        button.setAttribute('href', original);
+        button.setAttribute('download', '');
+        button.classList.add('button');
+        const li = document.createElement('li');
+        li.append(button);
+        contextmenu.append(li);
+        $(image).parent().append(contextmenu);
+
+        // add the contextmenu event listener
+        $(image).contextmenu(function(event) {
+
+          let menu = $(image).siblings('ul.context-menu')[0];
+          event.preventDefault();
+          Drupal.c2pa.toggleMenuOn(menu);
+          Drupal.c2pa.positionMenu(event, menu);
+          // create the menu
+          // show the menu at the location of the cursor
+        });
+
+        // attach behaviors
+        Drupal.attachBehaviors(context);
+      });
+
+      once('init-download-original-button-click', 'ul.context-menu button.originalButton', context).forEach(async (button) => {
+        let original = $(button).data('original');
+        if (original !== '') {
+
+        }
       });
 
     },
