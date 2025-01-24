@@ -2,8 +2,8 @@ import {
   createC2pa,
   createL2ManifestStore,
   generateVerifyUrl,
-} from "https://cdn.jsdelivr.net/npm/c2pa@0.17.8/+esm";
-import "https://cdn.jsdelivr.net/npm/c2pa-wc@0.10.15/+esm";
+} from "https://cdn.jsdelivr.net/npm/c2pa@0.24.2/+esm";
+import "https://cdn.jsdelivr.net/npm/c2pa-wc@0.13.16/+esm";
 /* instead of using the c2pa web componentslibrary which is inaccessible create our own HTML compatible popover */
 //import '/libraries/c2pa-js/packages/c2pa-wc/dist/index.js'
 import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr.net/npm/@floating-ui/dom@1.3.0/+esm';
@@ -179,9 +179,9 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
       once("init-c2pa", ".c2pa-wrapper", context).forEach(async (wrapper) => {
         const c2pa = await createC2pa({
           wasmSrc:
-            "https://cdn.jsdelivr.net/npm/c2pa@0.17.8/dist/assets/wasm/toolkit_bg.wasm",
+            "https://cdn.jsdelivr.net/npm/c2pa@0.24.2/dist/assets/wasm/toolkit_bg.wasm",
           workerSrc:
-            "https://cdn.jsdelivr.net/npm/c2pa@0.17.8/dist/c2pa.worker.min.js",
+            "https://cdn.jsdelivr.net/npm/c2pa@0.24.2/dist/c2pa.worker.min.js",
         });
 
         wrapper.querySelectorAll("img, video, audio, picture").forEach(async (element) => {
@@ -471,8 +471,13 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
    * @returns {Promise<string>}
    */
   Drupal.theme.c2paAssetsUsed = async function(ingredients) {
+    if (typeof ingredients == 'undefined') {
+      // apparently there were no assets used to make this asset
+      return '';
+    }
     let title = Drupal.t('Assets used');
     let infoIcon = await Drupal.theme('c2paInfoItem', Drupal.t('Any assets used or added to this content'));
+
     let items = [];
     ingredients.forEach((thisIngredient) => {
       let ingredientTitle = Drupal.t('A thumbnail of a file used as an ingredient to make this media asset: @fileName.', {'@fileName': thisIngredient.title});
