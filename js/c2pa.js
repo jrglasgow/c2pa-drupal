@@ -199,6 +199,9 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
           const manifestStoreResult = await createL2ManifestStore(
             result.manifestStore
           );
+          if (typeof manifestStoreResult.activeManifest === 'undefined') {
+            manifestStoreResult.activeManifest = result.manifestStore.activeManifest;
+          }
           const id = await Drupal.c2pa.idFromElement(element);
 
           // get the rendered manifest
@@ -425,7 +428,7 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
     let claimGenerator = (drupalSettings.c2pa.produced_with ?? true) ? await Drupal.theme('c2paClaimGenerator', manifestSummary) : '';
     let verifyUrl = (drupalSettings.c2pa.view_more ?? true) ? await Drupal.theme('c2paVerifyUrl', manifestSummary, srcUrl) : '';
     let editsAndActivity = (drupalSettings.c2pa.edits_and_activities ?? true) ? await Drupal.theme('c2paEditsAndActivity', manifestSummary.manifestStore.editsAndActivity) : '';
-    let assetsUsed = (drupalSettings.c2pa.assets_used ?? true) ? await Drupal.theme('c2paAssetsUsed', manifestSummary.manifestStore.ingredients, manifestSource) : '';
+    let assetsUsed = (drupalSettings.c2pa.assets_used ?? true) ? await Drupal.theme('c2paAssetsUsed', manifestSummary.manifestStore.ingredients ?? manifestSummary.activeManifest.ingredients, manifestSource) : '';
     let html = `
 <div class="c2pa-manifest-summary">
     ${c2paSignatureInformation}
@@ -488,12 +491,18 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
       let emptyText = Drupal.t('This ingredient contains no thumbnail.');
       let thisIngredientMarkup = `<a title="${ingredientTitle} ${emptyText}" class="image-thumb empty" href="#"><span class="hidden">${emptyText}</span><a/>`;
 
-      if (thisIngredient.thumbnail) {
-        thisIngredientMarkup = `<img alt="${ingredientTitle}" src="${thisIngredient.thumbnail}"/>`;
+      let thumbnailUrl = false;
+      if (typeof thisIngredient.thumbnail === 'object' && typeof thisIngredient.thumbnail.getUrl === 'function') {
+        thumbnailUrl = thisIngredient.thumbnail.getUrl();
       }
-      else {
+      else if (thisIngredient.thumbnail) {
+        thumbnailUrl = thisIngredient.thumbnail;
+      }
 
+      if (thumbnailUrl) {
+        thisIngredientMarkup = `<img alt="${ingredientTitle}" src="${thumbnailUrl.url}"/>`;
       }
+
       items.push(`<li class="${ingredientClass}" data-format="${thisIngredient.format}" data-has-manifest="${thisIngredient.hasManifest}">${thisIngredientMarkup}</li>`);
     });
     items = items.join('');
