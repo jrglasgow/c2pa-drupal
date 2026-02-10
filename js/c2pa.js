@@ -1,11 +1,11 @@
 import {
-  createC2pa,
-  createL2ManifestStore,
-  generateVerifyUrl,
-} from "https://cdn.jsdelivr.net/npm/c2pa@0.24.2/+esm";
-import "https://cdn.jsdelivr.net/npm/c2pa-wc@0.13.16/+esm";
-/* instead of using the c2pa web componentslibrary which is inaccessible create our own HTML compatible popover */
-//import '/libraries/c2pa-js/packages/c2pa-wc/dist/index.js'
+  createC2pa
+} from "https://cdn.jsdelivr.net/npm/@contentauth/c2pa-web@0.5.5/+esm";
+const wasmSrc = 'https://cdn.jsdelivr.net/npm/@contentauth/c2pa-web@0.5.5/dist/resources/c2pa_bg.wasm';
+
+const c2pa = await createC2pa({ wasmSrc });
+
+
 import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr.net/npm/@floating-ui/dom@1.3.0/+esm';
 
 
@@ -26,6 +26,90 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
   Drupal.c2pa.menu = Drupal.c2pa.menu || document.createElement('ul');
   Drupal.c2pa.menu.classList.add('c2pa-menu');
   Drupal.c2pa.menuState = Drupal.c2pa.menuState || 0;
+  Drupal.c2pa.c2paWorker = c2pa;
+
+  /**
+   * takes the source for a media asset and returns a URL for the content authenticity verification website
+   *
+   * @param src
+   * @returns {string}
+   */
+  Drupal.c2pa.generateVerifyUrl = function(src) {
+    const verifyUrl = `https://contentauthenticity.adobe.com/inspect?source=${src}`;
+    return verifyUrl;
+  }
+
+  /**
+   * Maps C2PA v2 action identifiers to USWDS icon SVG paths.
+   *
+   * Icons should live in: assets/svg/actions/
+   * Fallback icon: help.svg
+   */
+  Drupal.c2pa.actionMap = {
+      'c2pa.addedText': 'text_fields.svg',
+      'c2pa.adjustedColor': 'settings.svg',
+      'c2pa.changedSpeed': 'timer.svg',
+
+      // Deprecated but included
+      'c2pa.color_adjustments': 'settings.svg',
+
+      'c2pa.converted': 'update.svg',
+      'c2pa.created': 'add_circle.svg',
+
+      // No direct USWDS equivalent
+      'c2pa.cropped': null,
+
+      'c2pa.deleted': 'delete.svg',
+      'c2pa.drawing': 'edit.svg',
+      'c2pa.dubbed': 'hearing.svg',
+
+      'c2pa.edited': 'edit.svg',
+      'c2pa.edited.metadata': 'settings.svg',
+
+      'c2pa.enhanced': 'star.svg',
+      'c2pa.filtered': 'filter_alt.svg',
+      'c2pa.mastered': 'verified.svg',
+
+      'c2pa.mixed': null,
+
+      'c2pa.opened': 'folder_open.svg',
+
+      'c2pa.orientation': null,
+
+      'c2pa.placed': 'add.svg',
+      'c2pa.published': 'public.svg',
+
+      'c2pa.redacted': 'visibility_off.svg',
+
+      'c2pa.remixed': null,
+      'c2pa.removed': 'remove.svg',
+
+      'c2pa.repackaged': 'update.svg',
+
+      'c2pa.resized': 'unfold_more.svg',
+      'c2pa.resized.proportional': 'unfold_more.svg',
+
+      'c2pa.transcoded': 'update.svg',
+      'c2pa.translated': 'translate.svg',
+      'c2pa.trimmed': 'unfold_less.svg',
+
+      'c2pa.unknown': 'help.svg',
+
+      'c2pa.watermarked': 'verified_user.svg',
+      'c2pa.watermarked.bound': 'verified_user.svg',
+      'c2pa.watermarked.unbound': 'verified_user.svg',
+    };
+
+  /**
+   * Get the icon path for a C2PA action.
+   *
+   * @param {string} action
+   * @returns {string}
+   */
+   Drupal.c2pa.getC2paActionIcon = function(action) {
+    const icon = Drupal.c2pa.actionMap[action];
+    return drupalSettings.path.baseUrl + drupalSettings.c2pa.modulePath + `/assets/svg/actions/${icon || 'help.svg'}`;
+  }
 
   /**
    * from the element construct an Id tag using usique data including the tagName, the attributes of the tag and a
@@ -153,6 +237,14 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
     }
   }
 
+  Drupal.c2pa.resourceToUrl = async function(thumbnail, reader) {
+    const bytes = await reader.resourceToBytes(thumbnail.identifier);console.log('bytes', bytes);
+    // thumbRef.format is usually like "image/jpeg" or "image/png"
+    const thumbBlob = new Blob([bytes], { type: thumbnail.format || 'image/jpeg' });console.log('thumbBlob', thumbBlob);
+    let url = URL.createObjectURL(thumbBlob);console.log('url', url);
+    return url;
+  }
+
   $(document).ready(function() {
 
     // set up listeners to dismiss the context menu
@@ -172,17 +264,13 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
       }
     });
 
+    Drupal.attachBehaviors();
+
   });
 
   Drupal.behaviors.c2pa = {
-    async attach(context, settings) {
-      once("init-c2pa", ".c2pa-wrapper", context).forEach(async (wrapper) => {
-        const c2pa = await createC2pa({
-          wasmSrc:
-            "https://cdn.jsdelivr.net/npm/c2pa@0.24.2/dist/assets/wasm/toolkit_bg.wasm",
-          workerSrc:
-            "https://cdn.jsdelivr.net/npm/c2pa@0.24.2/dist/c2pa.worker.min.js",
-        });
+    attach(context, settings) {
+      once("init-c2pa", ".c2pa-wrapper", context).forEach(  (wrapper) => {
 
         wrapper.querySelectorAll("img, video, audio, picture").forEach(async (element) => {
           let src = Drupal.c2pa.elementSrc(element);
@@ -190,22 +278,26 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
           if ( original ) {
             src = original;
           }
-          const result = await c2pa.read(src);
-          let manifestStore = result.manifestStore;
+          const response = await fetch(src);
+          const blob = await response.blob();
+          const reader = await c2pa.reader.fromBlob(blob.type, blob);
+          let jsonManifest = await reader.json();
+          let manifestStore = await reader.manifestStore();
           if (manifestStore === null) {
             // if there is no manifests, skip it
             return;
           }
-          const manifestStoreResult = await createL2ManifestStore(
+          const manifestStoreResult = manifestStore;
+          /*const manifestStoreResult = await createL2ManifestStore(
             result.manifestStore
-          );
-          if (typeof manifestStoreResult.activeManifest === 'undefined') {
-            manifestStoreResult.activeManifest = result.manifestStore.activeManifest;
+          );*/
+          if (typeof manifestStore.activeManifest === 'undefined') {
+            manifestStoreResult.activeManifest = manifestStore.manifests[manifestStore.active_manifest];
           }
           const id = await Drupal.c2pa.idFromElement(element);
 
           // get the rendered manifest
-          let manifestMarkup = await Drupal.theme('c2paManifestSummary', manifestStoreResult, src, result.source);
+          let manifestMarkup = await Drupal.theme('c2paManifestSummary', manifestStoreResult, src, manifestStore.activeManifest , reader);
           const manifestSummary = new DOMParser().parseFromString(manifestMarkup, "text/html").firstChild;
 
           // create the info button
@@ -422,13 +514,14 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
    * @param src
    * @returns {Promise<string>}
    */
-  Drupal.theme.c2paManifestSummary = async function(manifestSummary, srcUrl, manifestSource) {
-
-    let c2paSignatureInformation = (drupalSettings.c2pa.content_credentials ?? true) ? await Drupal.theme('c2paSignatureInformation', manifestSummary, manifestSource) : '';
-    let claimGenerator = (drupalSettings.c2pa.produced_with ?? true) ? await Drupal.theme('c2paClaimGenerator', manifestSummary) : '';
-    let verifyUrl = (drupalSettings.c2pa.view_more ?? true) ? await Drupal.theme('c2paVerifyUrl', manifestSummary, srcUrl) : '';
-    let editsAndActivity = (drupalSettings.c2pa.edits_and_activities ?? true) ? await Drupal.theme('c2paEditsAndActivity', manifestSummary.manifestStore.editsAndActivity) : '';
-    let assetsUsed = (drupalSettings.c2pa.assets_used ?? true) ? await Drupal.theme('c2paAssetsUsed', manifestSummary.manifestStore.ingredients ?? manifestSummary.activeManifest.ingredients, manifestSource) : '';
+  Drupal.theme.c2paManifestSummary = async function(manifestSummary, srcUrl, manifestSource, reader) {
+    const assertions = manifestSummary.activeManifest.assertions;
+    let c2paSignatureInformation = (drupalSettings.c2pa.content_credentials ?? true) ? await Drupal.theme('c2paSignatureInformation', manifestSummary, manifestSource, reader) : '';
+    let claimGenerator = (drupalSettings.c2pa?.produced_with ?? true) ? await Drupal.theme('c2paClaimGenerator', manifestSummary) : '';
+    let verifyUrl = (drupalSettings.c2pa?.view_more ?? true) ? await Drupal.theme('c2paVerifyUrl', manifestSummary, srcUrl) : '';
+    const actionsAssertion = assertions.find(a => a.label === 'c2pa.actions.v2');
+    let editsAndActivity = (drupalSettings.c2pa?.edits_and_activities ?? true) ? await Drupal.theme('c2paEditsAndActivity', actionsAssertion) : '';
+    let assetsUsed = (drupalSettings.c2pa?.assets_used ?? true) ? await Drupal.theme('c2paAssetsUsed', manifestSummary?.manifestStore?.ingredients ?? manifestSummary?.activeManifest?.ingredients, manifestSource, reader) : '';
     let html = `
 <div class="c2pa-manifest-summary">
     ${c2paSignatureInformation}
@@ -473,7 +566,7 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
    * @param ingredients
    * @returns {Promise<string>}
    */
-  Drupal.theme.c2paAssetsUsed = async function(ingredients) {
+  Drupal.theme.c2paAssetsUsed = async function(ingredients, manifestSource, reader) {
     if (typeof ingredients == 'undefined') {
       // apparently there were no assets used to make this asset
       return '';
@@ -482,7 +575,8 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
     let infoIcon = await Drupal.theme('c2paInfoItem', Drupal.t('Any assets used or added to this content'));
 
     let items = [];
-    ingredients.forEach((thisIngredient) => {
+    //await ingredients.forEach(async (thisIngredient) => {
+    for (const thisIngredient of ingredients) {
       let ingredientTitle = Drupal.t('A thumbnail of a file used as an ingredient to make this media asset: @fileName.', {'@fileName': thisIngredient.title});
       if (thisIngredient.hasManifest) {
         ingredientTitle += ' ' + Drupal.t('A Content Credentials logo (the letters CR in a speech bubble) hovers over this image signifying that this ingredient contains a manifest.');
@@ -492,19 +586,17 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
       let thisIngredientMarkup = `<a title="${ingredientTitle} ${emptyText}" class="image-thumb empty" href="#"><span class="hidden">${emptyText}</span><a/>`;
 
       let thumbnailUrl = false;
-      if (typeof thisIngredient.thumbnail === 'object' && typeof thisIngredient.thumbnail.getUrl === 'function') {
-        thumbnailUrl = thisIngredient.thumbnail.getUrl();
-      }
-      else if (thisIngredient.thumbnail) {
-        thumbnailUrl = thisIngredient.thumbnail;
+      if (thisIngredient.thumbnail) {
+       let thumbnail = thisIngredient.thumbnail;console.log(588);
       }
 
-      if (thumbnailUrl) {
-        thisIngredientMarkup = `<img alt="${ingredientTitle}" src="${thumbnailUrl.url}"/>`;
+      if (thisIngredient.thumbnail) {
+        let thumbUrl = await Drupal.c2pa.resourceToUrl(thisIngredient.thumbnail, reader);
+        thisIngredientMarkup = `<img alt="${ingredientTitle}" src="${thumbUrl}"/>`;
       }
 
       items.push(`<li class="${ingredientClass}" data-format="${thisIngredient.format}" data-has-manifest="${thisIngredient.hasManifest}">${thisIngredientMarkup}</li>`);
-    });
+    }
     items = items.join('');
     items = `<ul>${items}</ul>`;
     return `
@@ -522,11 +614,11 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
    * @param manifestSummary
    * @returns {string}
    */
-  Drupal.theme.c2paEditsAndActivity = async function(editsAndActivity) {
+  Drupal.theme.c2paEditsAndActivity = async function(actionsAssertion) {
     let title = Drupal.t('Edits and Activity');
     let infoIcon = await Drupal.theme('c2paInfoItem', Drupal.t('Changes and actions taken to produce this content'));
     let edits = [];
-    editsAndActivity.forEach((thisEdit) => {
+    actionsAssertion.data.actions.forEach((thisEdit) => {
       let thisEditMarkup = Drupal.theme('c2paSingleEdit', thisEdit);
       edits.push(thisEditMarkup);
     });
@@ -548,12 +640,13 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
 `}
    */
   Drupal.theme.c2paSingleEdit = function(edit) {
-    let label = Drupal.t(edit.label);
-    let description = Drupal.t(edit.description);
-    let iconTitle = Drupal.t('Icon for @label', {'@label': edit.label});
-    let icon = edit.icon ? `<img class="icon" src="${edit.icon}" alt="${iconTitle}"/>` : '';
+    let label = Drupal.t(edit.action);
+    let description = Drupal.t(edit.description ?? '') ;
+    let iconTitle = Drupal.t('Icon for @label', {'@label': edit.action});
+    let iconTemp = Drupal.c2pa.getC2paActionIcon(edit.action);
+    let icon = edit.icon ?? `<img class="icon" src="${iconTemp}" alt="${iconTitle}"/>`;
     return `
-<dt class="label" data-edit-id="${edit.id}">${icon}<span class="section-edits-and-activity-list-item-label">${label}</span></dt>
+<dt class="label" data-edit-id="${edit.action}">${icon}<span class="section-edits-and-activity-list-item-label">${label}</span></dt>
 <dd class="edit-description">${description}</dd>
 `;
   }
@@ -567,7 +660,7 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
    * @returns {`<a class="view-more" href="${*}" target="_blank">${string}</a>`}
    */
   Drupal.theme.c2paVerifyUrl = function(manifestSummary, src) {
-    const url = generateVerifyUrl(src);
+    const url = Drupal.c2pa.generateVerifyUrl(src);
     const linkText = Drupal.t('View more');
     return `<a class="view-more" href="${url}" target="_blank">${linkText}</a>`;
   }
@@ -579,7 +672,11 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
    * @returns {Promise<string>}
    */
   Drupal.theme.c2paClaimGenerator = async function(manifestSummary) {
-    let claimGenerator = manifestSummary.manifestStore.claimGenerator.product;
+    const claimGeneratorInfo = manifestSummary.activeManifest.claim_generator_info;
+    const claimGeneratorName = claimGeneratorInfo[0].name;
+    const claimGeneratorVersion = claimGeneratorInfo[0].version;
+    const claimGeneratorOS = claimGeneratorInfo[0].operating_system;
+    let claimGenerator = `${claimGeneratorName} ${claimGeneratorVersion} ${claimGeneratorOS}`;
     let title = Drupal.t('Produced With');
     let infoIcon = await Drupal.theme('c2paInfoItem', Drupal.t('Software used to make this content'));
     let claimTitle = Drupal.t('Software that generated the manifest and claim.');
@@ -591,32 +688,55 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
 </section>`
   }
 
+  Drupal.c2pa.ThumbnailDataUrl = async function(ingredient) {
+    if (ingredient.thumbnail) {
+      const thumbnailBlob = new Blob([ingredient.thumbnail], { type: ingredient.thumbnail.format ?? 'image/jpeg' }); // Adjust type if needed
+
+      // 4. Convert to Data URL
+      return new Promise((resolve, reject) => {
+        const fileReader = new FileReader();
+        fileReader.onloadend = () => resolve(fileReader.result);
+        fileReader.onerror = reject;
+        fileReader.readAsDataURL(thumbnailBlob);
+      });
+    }
+    else {
+      return null;
+    }
+  }
+
   /**
    * display information about the signature
    *
    * @param manifestSummary
    * @returns {Promise<string>}
    */
-  Drupal.theme.c2paSignatureInformation = async function(manifestSummary, manifestSource) {
+  Drupal.theme.c2paSignatureInformation = async function(manifestSummary, manifestSource, reader) {
+
     let ccTitle = Drupal.t("Content Credentials");
     let thumbnailTitle = Drupal.t('');
     let thumbnailMarkup = `<a href="#">${thumbnailTitle}</a>`;
-
+    console.log(719, 'manifestSource', manifestSource);
     let url = false;
     if (manifestSource.thumbnail.blob) {
       // there is a thumbnail that can be used
-      url = URL.createObjectURL(manifestSource.thumbnail.blob);
+      url = URL.createObjectURL(manifestSource.thumbnail.blob);console.log(723, 'url', url);
     }
     else if (manifestSource.blob && manifestSource.blob.type.search('image/')) {
       // we have a blob or the source and it is of an image type so it can be used
-      url = URL.createObjectURL(manifestSource.blob);
+      url = URL.createObjectURL(manifestSource.blob);console.log(727, 'url', url);
     }
+    else if (manifestSource.thumbnail.identifier) {
+      url = await Drupal.c2pa.resourceToUrl(manifestSource.thumbnail, reader);console.log(730, 'url', url);
+    }
+    console.log(732, 'url', url);
     if (url) {
       // there is a thumbnail
       thumbnailMarkup = `<img src="${url}" title="${thumbnailTitle}"/>`;
     }
-    let issuer = manifestSummary.manifestStore.signature.issuer;
-    let signDate = new Date(manifestSummary.manifestStore.signature.isoDateString);
+    const signatureInfo = manifestSummary.activeManifest.signature_info;
+    let issuer = signatureInfo.issuer;
+    let signDate = new Date(signatureInfo.time);
     let signDateString = signDate.toLocaleDateString() + ' ' +  signDate.toLocaleTimeString();
     let dateTitle = Drupal.t('Manifest signature date');
     let issuerTitle = Drupal.t('signing certificate subjet organization name');

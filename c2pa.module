@@ -37,5 +37,6 @@ function c2pa_add_attachments(&$build) {
   if (!isset($build['#attached']['drupalSettings']['c2pa'])) {
     $build['#attached']['drupalSettings']['c2pa'] =\Drupal::config('c2pa.settings')->getRawData();
   }
+  $build['#attached']['drupalSettings']['c2pa']['modulePath'] = \Drupal::service('extension.list.module')->getPath('c2pa');
 
 }
