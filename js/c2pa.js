@@ -238,10 +238,10 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
   }
 
   Drupal.c2pa.resourceToUrl = async function(thumbnail, reader) {
-    const bytes = await reader.resourceToBytes(thumbnail.identifier);console.log('bytes', bytes);
+    const bytes = await reader.resourceToBytes(thumbnail.identifier);
     // thumbRef.format is usually like "image/jpeg" or "image/png"
-    const thumbBlob = new Blob([bytes], { type: thumbnail.format || 'image/jpeg' });console.log('thumbBlob', thumbBlob);
-    let url = URL.createObjectURL(thumbBlob);console.log('url', url);
+    const thumbBlob = new Blob([bytes], { type: thumbnail.format || 'image/jpeg' });
+    let url = URL.createObjectURL(thumbBlob);
     return url;
   }
 
@@ -587,7 +587,7 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
 
       let thumbnailUrl = false;
       if (thisIngredient.thumbnail) {
-       let thumbnail = thisIngredient.thumbnail;console.log(588);
+       let thumbnail = thisIngredient.thumbnail;
       }
 
       if (thisIngredient.thumbnail) {
@@ -716,20 +716,20 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
     let ccTitle = Drupal.t("Content Credentials");
     let thumbnailTitle = Drupal.t('');
     let thumbnailMarkup = `<a href="#">${thumbnailTitle}</a>`;
-    console.log(719, 'manifestSource', manifestSource);
+
     let url = false;
     if (manifestSource.thumbnail.blob) {
       // there is a thumbnail that can be used
-      url = URL.createObjectURL(manifestSource.thumbnail.blob);console.log(723, 'url', url);
+      url = URL.createObjectURL(manifestSource.thumbnail.blob);
     }
     else if (manifestSource.blob && manifestSource.blob.type.search('image/')) {
       // we have a blob or the source and it is of an image type so it can be used
-      url = URL.createObjectURL(manifestSource.blob);console.log(727, 'url', url);
+      url = URL.createObjectURL(manifestSource.blob);
     }
     else if (manifestSource.thumbnail.identifier) {
-      url = await Drupal.c2pa.resourceToUrl(manifestSource.thumbnail, reader);console.log(730, 'url', url);
+      url = await Drupal.c2pa.resourceToUrl(manifestSource.thumbnail, reader);
     }
-    console.log(732, 'url', url);
+
     if (url) {
       // there is a thumbnail
       thumbnailMarkup = `<img src="${url}" title="${thumbnailTitle}"/>`;
