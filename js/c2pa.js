@@ -101,6 +101,58 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
     };
 
   /**
+   * given the source url of a media asset we will do our best to generate a thumbnail image of that asset, failing that
+   * a thumbnail representing the mime type will be returned.
+   *
+   * @param srcUrl
+   *
+   * @return string - the data url
+   */
+  Drupal.c2pa.thumbFromSrcUrl = async function(srcUrl) {
+    const mime = Drupal.c2pa.guessMimeTypeFromUrl(srcUrl);
+    const type = mime.split("/")[0] || "file";
+
+    const config = {
+      image: { fileName: "image.svg" },
+      video: { fileName: "video_file.svg" },
+      audio: { fileName: "audio_file.svg" },
+      text: { fileName: "text_snippet.svg" },
+      file: { fileName: "file.svg"}
+    };
+
+    const { fileName, color } = config[type] || config.file;
+
+    const thumbnail = drupalSettings.path.baseUrl + drupalSettings.c2pa.modulePath + `/assets/svg/media/${fileName || 'file.svg'}`;
+
+    return thumbnail;
+  }
+
+  Drupal.c2pa.guessMimeTypeFromUrl = function(url) {
+    const ext = (url.split("?")[0].split("#")[0].split(".").pop() || "").toLowerCase();
+
+    const byExt = {
+      jpg: "image/jpeg",
+      jpeg: "image/jpeg",
+      png: "image/png",
+      gif: "image/gif",
+      webp: "image/webp",
+      svg: "image/svg+xml",
+      mp4: "video/mp4",
+      webm: "video/webm",
+      mov: "video/quicktime",
+      mp3: "audio/mpeg",
+      wav: "audio/wav",
+      txt: "text/plain",
+      csv: "text/csv",
+      json: "application/json",
+      pdf: "application/pdf",
+      zip: "application/zip"
+    };
+
+    return byExt[ext] || "application/octet-stream";
+  }
+
+  /**
    * Get the icon path for a C2PA action.
    *
    * @param {string} action
@@ -516,12 +568,12 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
    */
   Drupal.theme.c2paManifestSummary = async function(manifestSummary, srcUrl, manifestSource, reader) {
     const assertions = manifestSummary.activeManifest.assertions;
-    let c2paSignatureInformation = (drupalSettings.c2pa.content_credentials ?? true) ? await Drupal.theme('c2paSignatureInformation', manifestSummary, manifestSource, reader) : '';
+    let c2paSignatureInformation = (drupalSettings.c2pa.content_credentials ?? true) ? await Drupal.theme('c2paSignatureInformation', manifestSummary, manifestSource, reader, srcUrl) : '';
     let claimGenerator = (drupalSettings.c2pa?.produced_with ?? true) ? await Drupal.theme('c2paClaimGenerator', manifestSummary) : '';
     let verifyUrl = (drupalSettings.c2pa?.view_more ?? true) ? await Drupal.theme('c2paVerifyUrl', manifestSummary, srcUrl) : '';
     const actionsAssertion = assertions.find(a => a.label === 'c2pa.actions.v2');
     let editsAndActivity = (drupalSettings.c2pa?.edits_and_activities ?? true) ? await Drupal.theme('c2paEditsAndActivity', actionsAssertion) : '';
-    let assetsUsed = (drupalSettings.c2pa?.assets_used ?? true) ? await Drupal.theme('c2paAssetsUsed', manifestSummary?.manifestStore?.ingredients ?? manifestSummary?.activeManifest?.ingredients, manifestSource, reader) : '';
+    let assetsUsed = (drupalSettings.c2pa?.assets_used ?? true) ? await Drupal.theme('c2paAssetsUsed', manifestSummary?.manifestStore?.ingredients ?? manifestSummary?.activeManifest?.ingredients, manifestSource, reader, srcUrl) : '';
     let html = `
 <div class="c2pa-manifest-summary">
     ${c2paSignatureInformation}
@@ -566,7 +618,7 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
    * @param ingredients
    * @returns {Promise<string>}
    */
-  Drupal.theme.c2paAssetsUsed = async function(ingredients, manifestSource, reader) {
+  Drupal.theme.c2paAssetsUsed = async function(ingredients, manifestSource, reader, srcUrl) {
     if (typeof ingredients == 'undefined') {
       // apparently there were no assets used to make this asset
       return '';
@@ -592,6 +644,10 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
 
       if (thisIngredient.thumbnail) {
         let thumbUrl = await Drupal.c2pa.resourceToUrl(thisIngredient.thumbnail, reader);
+        thisIngredientMarkup = `<img alt="${ingredientTitle}" src="${thumbUrl}"/>`;
+      }
+      else {
+        let thumbUrl = await Drupal.c2pa.thumbFromSrcUrl(srcUrl);
         thisIngredientMarkup = `<img alt="${ingredientTitle}" src="${thumbUrl}"/>`;
       }
 
@@ -688,6 +744,12 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
 </section>`
   }
 
+  /**
+   * Generate the Thumbnail Data Url
+   * @param ingredient
+   * @returns {Promise<unknown>}
+   * @constructor
+   */
   Drupal.c2pa.ThumbnailDataUrl = async function(ingredient) {
     if (ingredient.thumbnail) {
       const thumbnailBlob = new Blob([ingredient.thumbnail], { type: ingredient.thumbnail.format ?? 'image/jpeg' }); // Adjust type if needed
@@ -711,23 +773,28 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
    * @param manifestSummary
    * @returns {Promise<string>}
    */
-  Drupal.theme.c2paSignatureInformation = async function(manifestSummary, manifestSource, reader) {
+  Drupal.theme.c2paSignatureInformation = async function(manifestSummary, manifestSource, reader ,srcUrl) {
 
     let ccTitle = Drupal.t("Content Credentials");
     let thumbnailTitle = Drupal.t('');
     let thumbnailMarkup = `<a href="#">${thumbnailTitle}</a>`;
 
     let url = false;
-    if (manifestSource.thumbnail.blob) {
+    if (manifestSource?.thumbnail?.blob) {
       // there is a thumbnail that can be used
       url = URL.createObjectURL(manifestSource.thumbnail.blob);
     }
-    else if (manifestSource.blob && manifestSource.blob.type.search('image/')) {
+    else if (manifestSource?.blob && manifestSource.blob.type.search('image/')) {
       // we have a blob or the source and it is of an image type so it can be used
       url = URL.createObjectURL(manifestSource.blob);
     }
-    else if (manifestSource.thumbnail.identifier) {
+    else if (manifestSource?.thumbnail?.identifier) {
       url = await Drupal.c2pa.resourceToUrl(manifestSource.thumbnail, reader);
+    }
+    else {
+      //  thumbnail cannot be found
+      // use a generic thumbnail based on the file mime type
+      url = await Drupal.c2pa.thumbFromSrcUrl(srcUrl);
     }
 
     if (url) {

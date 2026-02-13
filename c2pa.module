@@ -40,3 +40,11 @@ function c2pa_add_attachments(&$build) {
   $build['#attached']['drupalSettings']['c2pa']['modulePath'] = \Drupal::service('extension.list.module')->getPath('c2pa');
 
 }
+
+
+/**
+ * Implements hook_page_attachments().
+ */
+function c2pa_page_attachments(array &$attachments) {
+  c2pa_add_attachments($attachments);
+}

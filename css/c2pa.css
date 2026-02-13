@@ -33,6 +33,7 @@
   background-size: cover;
   border: none;
   opacity: 70%;
+  z-index: 5000;
 }
 figure.caption.c2pa-wrapper {
   display: table;
