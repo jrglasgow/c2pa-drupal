@@ -629,7 +629,8 @@ import { computePosition, autoUpdate, autoPlacement } from 'https://cdn.jsdelivr
     let items = [];
     //await ingredients.forEach(async (thisIngredient) => {
     for (const thisIngredient of ingredients) {
-      let ingredientTitle = Drupal.t('A thumbnail of a file used as an ingredient to make this media asset: @fileName.', {'@fileName': thisIngredient.title});
+      let ingredientTitle = Drupal.t('A thumbnail of a file used as an ingredient to make this media asset: @fileName.', 
+        {'@fileName': thisIngredient.title ?? Drupal.t("No Title Given")});
       if (thisIngredient.hasManifest) {
         ingredientTitle += ' ' + Drupal.t('A Content Credentials logo (the letters CR in a speech bubble) hovers over this image signifying that this ingredient contains a manifest.');
       }
